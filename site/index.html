@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Scientia Vitae - MH em Números</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fbf9f5;--accent:#2aa79b;--muted:#8c8c8c;--panel:#ffffff;--maxw:1100px;}
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{margin:0;background:var(--bg);color:#0b2a2b}
+    header{display:flex;align-items:center;justify-content:space-between;padding:20px;max-width:var(--maxw);margin:16px auto}
+    header .brand{display:flex;align-items:center;gap:12px}
+    header img.logo{height:56px;border-radius:8px}
+    main{max-width:var(--maxw);margin:10px auto;padding:18px}
+    .top-row{display:flex;gap:20px;align-items:flex-start}
+    .viz{flex:1;min-width:320px;background:var(--panel);padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
+    .side{width:360px;min-width:260px}
+    .details{background:var(--panel);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.04)}
+    .center-label{font-weight:700;font-size:18px;fill:#0b2a2b}
+    svg{width:100%;height:auto}
+    .legend{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+    .leg-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#fff}
+    .leg-color{width:14px;height:14px;border-radius:3px}
+    h2{margin:0 0 8px}
+    p{margin:0 0 10px;color:var(--muted)}
+    .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none}
+    @media(max-width:900px){ .top-row{flex-direction:column} .side{width:auto} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div style="font-weight:700">Scientia Vitae</div>
+    <div style="font-size:12px;color:var(--muted)">Consultoria e Assessoria Ambiental</div>
+  </div>
+</header>
+
+<main>
+  <section class="top-row">
+    <div class="viz">
+      <h2>MH em Números</h2>
+      <div id="chart"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="side">
+      <div class="details">
+        <h3 id="detail-title">Scientia Vitae</h3>
+        <p id="detail-desc">Clique em um segmento para ver detalhes.</p>
+        <hr style="margin:10px 0">
+        <ul id="detail-list"></ul>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const data = {
+  company: "Scientia Vitae",
+  projects: [
+    { name:"Habitação Social", value:50,
+      services:"Execução TTS (35), Reassentamento (10), Pós-ocupação (5)",
+      activities:"Mobilização comunitária (200 reuniões); Educação sanitária (150 oficinas); Geração de renda (100 cursos); Acompanhamento social (5000 atendimentos)",
+      indicators:"Famílias atendidas: 15.000; Adesão: 85%; Satisfação: 92%"
+    },
+    { name:"Regularização Fundiária", value:20,
+      services:"Levantamentos, coleta documental, apoio jurídico",
+      activities:"Selagem de imóveis (10.000); Cadastramento socioeconômico (8.000); Apoio documental (6.000)",
+      indicators:"Imóveis regularizados:5.000; Tempo médio:8 meses; Documentação completa:75%"
+    },
+    { name:"Diagnóstico Social", value:30,
+      services:"Pesquisas e mapeamento",
+      activities:"Entrevistas (5.000); Oficinas (100); Análises (50)",
+      indicators:"Abrangência:20.000; Fontes:10; Aplicabilidade:80%"
+    }
+  ]
+};
+
+const width = Math.min(600, window.innerWidth-40);
+const radius = width/2;
+const svg = d3.select("#chart").append("svg")
+  .attr("viewBox",`0 0 ${width} ${width}`)
+  .append("g").attr("transform",`translate(${radius},${radius})`);
+const color = d3.scaleOrdinal(d3.schemeSet3);
+const pie = d3.pie().value(d=>d.value);
+const arc = d3.arc().innerRadius(radius*0.5).outerRadius(radius*0.8).cornerRadius(5);
+
+svg.selectAll("path")
+  .data(pie(data.projects))
+  .join("path")
+  .attr("d",arc)
+  .attr("fill",d=>color(d.data.name))
+  .on("click",(e,d)=>showDetails(d.data));
+
+svg.append("circle").attr("r",radius*0.5).attr("fill","#fff");
+svg.append("text").attr("text-anchor","middle").attr("dy","-.2em").text(data.company);
+svg.append("text").attr("text-anchor","middle").attr("dy","1.2em").style("font-size","12px").text("Clique no setor");
+
+data.projects.forEach(p=>{
+  const item = d3.select("#legend").append("div").attr("class","leg-item");
+  item.append("div").attr("class","leg-color").style("background",color(p.name));
+  item.append("div").text(`${p.name} (${p.value})`);
+});
+
+function showDetails(d){
+  document.getElementById("detail-title").innerText = d.name;
+  document.getElementById("detail-desc").innerText = d.services;
+  const list = document.getElementById("detail-list");
+  list.innerHTML = "";
+  const li1 = document.createElement("li"); li1.innerText = "Atividades: " + d.activities;
+  const li2 = document.createElement("li"); li2.innerText = "Indicadores: " + d.indicators;
+  list.append(li1,li2);
+}
+
+showDetails(data.projects[0]);
+</script>
+
+</body>
+</html>
